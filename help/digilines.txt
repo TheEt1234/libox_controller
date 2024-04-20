@@ -1,0 +1,33 @@
+Digilines
+=========
+
+If the digilines mod is installed, then Luacontrollers can also send/receive digilines signals.
+
+To send a digilines signal, use the digiline_send() function.
+Example:
+digiline_send("lcd","Hello") --Sends the message "Hello" on the channel "lcd"
+
+Please note that digilines messages are sent from all pins, and there is no need or ability to select one.
+
+When a digilines signal is received, an event occurs.
+Example:
+{
+	type = "digiline",
+	channel = "lcd",
+	msg = "Hello"
+}
+
+Oh and also,
+digiline_send("message", { function() end }, true)
+
+- digiline messages can transmit functions now
+- the digiline message doesn't need to be copied now 
+	- (yes this allows communication with tables, that is way more efficent than using digiline wire and way more fun)
+
+BUT, when transmitting functions, keep in mind that it will have no environment, you will have to make a function like this:
+
+function i_am_gonna_send_this(ENV)
+	ENV.digiline_send("stuff","stuff")
+	ENV.math.exp(1)
+	ENV.print("HI")
+end

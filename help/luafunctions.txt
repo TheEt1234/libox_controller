@@ -1,0 +1,191 @@
+Lua Functions
+=============
+
+The libox_controller uses mainly libox to get its environment...
+- you can see the environment with:
+    print(_G)
+
+here is what that may look like:
+
+{
+	table = {
+		sort = <function>,
+		shuffle = <function>,
+		insert_all = <function>,
+		key_value_swap = <function>,
+		copy = <function>,
+		maxn = <function>,
+		insert = <function>,
+		remove = <function>,
+		move = <function>,
+		indexof = <function>
+	},
+	type = <function>,
+	next = <function>,
+	pairs = <function>,
+	ipairs = <function>,
+	pos = {
+		x = -1211,
+		y = 120,
+		z = 2007
+	},
+	heat = 1,
+	unpack = <function>,
+	select = <function>,
+	tonumber = <function>,
+	tostring = <function>,
+	error = <function>,
+	pcall = <function>,
+	os = {
+		datetable = <function>,
+		clock = <function>,
+		date = <function>,
+		time = <function>,
+		difftime = <function>
+	},
+	loadstring = <function>,
+	collectgarbage = <function>,
+	print = <function>,
+	_VERSION = "Lua 5.1",
+	port = {
+		a = false,
+		c = false,
+		b = false,
+		d = false
+	},
+	dump = <function>,
+	bit = {
+		rshift = <function>,
+		arshift = <function>,
+		rol = <function>,
+		ror = <function>,
+		band = <function>,
+		bor = <function>,
+		bxor = <function>,
+		tohex = <function>,
+		tobit = <function>,
+		bnot = <function>,
+		bswap = <function>,
+		lshift = <function>
+	},
+	math = {
+		log = <function>,
+		deg = <function>,
+		hypot = <function>,
+		sign = <function>,
+		factorial = <function>,
+		round = <function>,
+		rad = <function>,
+		atan2 = <function>,
+		pow = <function>,
+		fmod = <function>,
+		ldexp = <function>,
+		min = <function>,
+		max = <function>,
+		pi = 3.1415926535898,
+		huge = inf,
+		random = <function>,
+		abs = <function>,
+		floor = <function>,
+		ceil = <function>,
+		sqrt = <function>,
+		log10 = <function>,
+		exp = <function>,
+		sin = <function>,
+		cos = <function>,
+		tan = <function>,
+		asin = <function>,
+		acos = <function>,
+		atan = <function>,
+		sinh = <function>,
+		cosh = <function>,
+		tanh = <function>,
+		frexp = <function>,
+		modf = <function>
+	},
+	heat_max = 20,
+	clearterm = <function>,
+	interrupt = <function>,
+	digiline_send = <function>,
+	conf = {
+		time_limit = 1000, -- btw the time limit is in microseconds
+		digiline_channel_maxlen = 256, -- in characters
+		digiline_maxlen = 50000, -- in bytes
+		memory_max_size = 100000 -- in serialized characters
+	},
+	_G = <circular reference>,
+	vector = {
+		angle = <function>,
+		dot = <function>,
+		cross = <function>,
+		new = <function>,
+		multiply = <function>,
+		offset = <function>,
+		check = <function>,
+		copy = <function>,
+		sort = <function>,
+		zero = <function>,
+		from_string = <function>,
+		add = <function>,
+		rotate = <function>,
+		floor = <function>,
+		equals = <function>,
+		direction = <function>,
+		round = <function>,
+		length = <function>,
+		normalize = <function>,
+		divide = <function>,
+		apply = <function>,
+		dir_to_rotation = <function>,
+		combine = <function>,
+		distance = <function>,
+		to_string = <function>,
+		rotate_around_axis = <function>,
+		in_area = <function>,
+		subtract = <function>
+	},
+	event = {
+		type = "program"
+	},
+	assert = <function>,
+	require = <function>,
+	dump2 = <function>,
+	string = {
+		byte = <function>,
+		char = <function>,
+		sub = <function>,
+		rep = <function>,
+		reverse = <function>,
+		lower = <function>,
+		upper = <function>,
+		dump = <function>,
+		find = <function>,
+		format = <function>,
+		split = <function>,
+		trim = <function>,
+		len = <function>
+	},
+	mem = {
+		
+	},
+	xpcall = <function>,
+	minetest = {
+		formspec_escape = <function>,
+		encode_base64 = <function>,
+		explode_textlist_event = <function>,
+		explode_scrollbar_event = <function>,
+		rgba = <function>,
+		urlencode = <function>,
+		decode_base64 = <function>,
+		explode_table_event = <function>,
+		inventorycube = <function>
+	},
+	pin = {
+		d = false,
+		c = false,
+		b = false,
+		a = false
+	}
+}
+
+those are all functions you can use, some of them may be limited though
