@@ -230,7 +230,7 @@ local function get_digiline_send(pos, itbl, send_warning)
     if not minetest.global_exists("digilines") then return end
     local chan_maxlen = settings.digiline_channel_maxlen
     local maxlen = settings.digiline_maxlen
-    return function(channel, msg, dont_copy)
+    return function(channel, msg)
         -- NOTE: This runs within string metatable sandbox, so don't *rely* on anything of the form (""):y
         --        or via anything that could.
         -- Make sure channel is string, number or boolean
@@ -244,11 +244,11 @@ local function get_digiline_send(pos, itbl, send_warning)
             return false
         end
 
-        if (not dont_copy) and type(msg) == "table" then
-            msg = table.copy(msg)
-        end
         local msg_cost
-        msg, msg_cost = libox.digiline_sanitize(msg, true)
+        msg, msg_cost = libox.digiline_sanitize(msg, true, function(f)
+            setfenv(f, {})
+            return f
+        end)
 
         if msg == nil or msg_cost > maxlen then
             send_warning("Message was too complex, or contained invalid data.")

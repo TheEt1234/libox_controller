@@ -20,9 +20,7 @@ Example:
 Oh and also,
 digiline_send("message", { function() end }, true)
 
-- digiline messages can transmit functions now
-- the digiline message doesn't need to be copied now 
-	- (yes this allows communication with tables, that is way more efficent than using digiline wire and way more fun)
+digiline messages can transmit functions now
 
 BUT, when transmitting functions, keep in mind that it will have no environment, you will have to make a function like this:
 
