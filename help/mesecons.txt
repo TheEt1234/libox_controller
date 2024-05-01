@@ -30,3 +30,12 @@ port.a = not pin.a
 
 Won't turn on/off the port a, even for a milisecond
 Ports get processed after the luacontroller has executed
+
+Oh and also....
+
+pin isn't port
+
+pin is INPUT
+port is OUTPUT
+
+so if you have any bugs in your code, consider checking if you are using pin/port right

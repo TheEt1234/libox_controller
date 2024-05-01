@@ -2,10 +2,10 @@
 --       |
 --       |
 --       |        __       ___  _   __         _  _
--- |   | |       |  | |\ |  |  |_| |  | |  |  |_ |_|
--- |___| |______ |__| | \|  |  | \ |__| |_ |_ |_ |\
--- |
--- |
+--       |       |  | |\ |  |  |_| |  | |  |  |_ |_|
+--  libox|______ |__| | \|  |  | \ |__| |_ |_ |_ |\
+--
+--
 
 -- Reference
 -- ports = get_real_port_states(pos): gets if inputs are powered from outside
@@ -17,12 +17,13 @@
 -- reset_meta(pos, code, errmsg): performs a software-reset, installs new code and prints error message
 -- run(pos, event): a wrapper for run_inner which gets code & handles errors via reset_meta
 -- resetn(pos): performs a hardware reset, turns off all ports
---
+
 -- The Sandbox
 -- The whole code of the controller runs in a sandbox,
 -- a very restricted environment.
 -- Actually the only way to damage the server is to
 -- use too much memory from the sandbox.
+-- IF THIS HAPPENS REPORT IT AS A BUG.
 -- You can add more functions to the environment
 -- (see where local env is defined)
 -- Something nice to play is is appending minetest.env to it.
@@ -34,7 +35,7 @@
 local settings = {
     digiline_channel_maxlen = 256, -- in characters (1 byte/character + 25 for lua stuff)
     digiline_maxlen = 50000,       -- in bytes
-    memory_max_size = 100000,      -- in serialized characters
+    memory_max_size = 100000,      -- in serialized characters (whatever minetest feels like doing lmao, 1 byte/character + 25)
     time_limit = 3000,             -- in microseconds, 1 milisecond = 1000 microseconds
 }
 
@@ -57,7 +58,7 @@ local function burn_controller(pos)
 end
 
 local function overheat(pos)
-    if mesecon.do_overheat(pos) then -- If too hot
+    if mesecon.do_overheat(pos) then
         burn_controller(pos)
         return true
     end
@@ -150,11 +151,14 @@ end
 local function validate_iid(iid)
     if iid == nil then return true end -- nil is OK
 
+    if type(iid) == "number" or type(iid) == "boolean" then
+        return true
+    end
+
     if type(iid) == "string" then
         -- string type interrupt
-        local limit = 256 -- you dont need more than this you dont need less than this.
+        local limit = 256 -- you dont need more than this
         if #iid <= limit then
-            -- string is OK unless too long
             return true
         end
         return false, "An interrupt ID was too large!"
@@ -202,26 +206,53 @@ local function set_nodetimer_interrupt(pos, time, iid)
 end
 
 
--- use global action queue always
-get_interrupt = function(pos, itbl, send_warning)
-    -- iid = interrupt id
-    return function(time, iid, lightweight)
-        -- NOTE: This runs within string metatable sandbox, so don't *rely* on anything of the form (""):y
-        -- Hence the values get moved out. Should take less time than original, so totally compatible
-        if type(time) ~= "number" then error("Delay must be a number", 2) end
-        table.insert(itbl, function()
-            -- Outside string metatable sandbox, can safely run this now
-            local luac_id = minetest.get_meta(pos):get_int("luac_id")
-            local ok, warn = validate_iid(iid)
-            if ok then
-                if lightweight then
-                    set_nodetimer_interrupt(pos, time, iid)
-                else
-                    mesecon.queue:add_action(pos, "lc_interrupt", { luac_id, iid }, time, iid, 1)
-                end
+-- The setting affects API so is not intended to be changeable at runtime
+local get_interrupt
+if mesecon.setting("luacontroller_lightweight_interrupts", false) then
+    -- use node timer
+    get_interrupt = function(pos, _, send_warning)
+        return (function(time, iid, lightweight)
+            if lightweight == false then send_warning("Interrupts are always lightweight on this server") end
+            if type(time) ~= "nil" and type(time) ~= "number" then
+                error("Delay must be a number to set or nil to cancel")
             end
+            if type(time) == "number" and time < 0.5 then
+                send_warning("Delays of less than 0.5 seconds are not allowed on this server")
+            end
+            local ok, warn = validate_iid(iid)
+            if ok then set_nodetimer_interrupt(pos, time, iid) end
             if warn then send_warning(warn) end
         end)
+    end
+else
+    -- use global action queue
+    -- itbl: Flat table of functions to run after sandbox cleanup, used to prevent various security hazards
+    get_interrupt = function(pos, itbl, send_warning)
+        -- iid = interrupt id
+        return function(time, iid, lightweight)
+            -- NOTE: This runs within string metatable sandbox, so don't *rely* on anything of the form (""):y
+            -- Hence the values get moved out. Should take less time than original, so totally compatible
+            if lightweight then
+                if type(time) ~= "nil" and type(time) ~= "number" then
+                    error("Delay must be a number to set or nil to cancel")
+                end
+            else
+                if type(time) ~= "number" then error("Delay must be a number") end
+            end
+            table.insert(itbl, function()
+                -- Outside string metatable sandbox, can safely run this now
+                local luac_id = minetest.get_meta(pos):get_int("luac_id")
+                local ok, warn = validate_iid(iid)
+                if ok then
+                    if lightweight then
+                        set_nodetimer_interrupt(pos, time, iid)
+                    else
+                        mesecon.queue:add_action(pos, "lc_interrupt", { luac_id, iid }, time, iid, 1)
+                    end
+                end
+                if warn then send_warning(warn) end
+            end)
+        end
     end
 end
 
@@ -231,9 +262,8 @@ local function get_digiline_send(pos, itbl, send_warning)
     local chan_maxlen = settings.digiline_channel_maxlen
     local maxlen = settings.digiline_maxlen
     return function(channel, msg)
-        -- NOTE: This runs within string metatable sandbox, so don't *rely* on anything of the form (""):y
-        --        or via anything that could.
-        -- Make sure channel is string, number or boolean
+        -- NOTE: This runs within string metatable sandbox
+
         if type(channel) == "string" then
             if #channel > chan_maxlen then
                 send_warning("Channel string too long.")
@@ -244,14 +274,20 @@ local function get_digiline_send(pos, itbl, send_warning)
             return false
         end
 
-        local msg_cost
-        msg, msg_cost = libox.digiline_sanitize(msg, true, function(f)
-            setfenv(f, {})
-            return f
-        end)
+        local msg, msg_cost = libox.digiline_sanitize(msg, true,
+            function(f)
+                setfenv(f, {})
+                return f
+            end
+        )
 
-        if msg == nil or msg_cost > maxlen then
-            send_warning("Message was too complex, or contained invalid data.")
+        if msg == nil then
+            send_warning("Message was nil")
+            return false
+        end
+
+        if msg_cost > maxlen then
+            send_warning("Message contained too much data")
             return false
         end
 
@@ -327,6 +363,7 @@ end
 -- run (as opposed to run_inner) is responsible for setting up meta according to this output
 local function run_inner(pos, meta, event)
     -- Note: These return success, presumably to avoid changing LC ID.
+    -- everything burned: success!
     if overheat(pos) then return true, "" end
     if ignore_event(event, meta) then return true, "" end
 
@@ -348,11 +385,21 @@ local function run_inner(pos, meta, event)
     local success, msg = libox.normal_sandbox({
         env = env,
         code = meta:get_string("code"),
-        allow_bytecode = false, -- setting this to true would allow RCE, we dont want that
         hook_time = 10,
         max_time = settings.time_limit
     })
-    -- End string true sandboxing
+
+    save_memory(pos, meta, env.mem) -- save memory regardless of error
+
+    -- Execute deferred tasks regardless of error
+    for _, v in ipairs(itbl) do
+        local failure = v()
+        if failure then
+            ok = false
+            errmsg = failure
+        end
+    end
+
     if not success then return false, msg end
     if type(env.port) ~= "table" then
         return false, "Ports set are invalid."
@@ -360,17 +407,6 @@ local function run_inner(pos, meta, event)
 
     -- Actually set the ports
     libox_controller.set_port_states(pos, env.port)
-
-    -- Save memory. This may burn the luacontroller if a memory overflow occurs.
-    save_memory(pos, meta, env.mem)
-
-    -- Execute deferred tasks
-    for _, v in ipairs(itbl) do
-        local failure = v()
-        if failure then
-            return false, failure
-        end
-    end
     return true, warning
 end
 
@@ -396,15 +432,17 @@ function libox_controller.run(pos, event)
     local meta = minetest.get_meta(pos)
     local code = meta:get_string("code")
     local ok, errmsg = run_inner(pos, meta, event)
+
+
     if not ok then
-        if type(errmsg) ~= "string" then
-            errmsg = "(unknown error)"
-        end
+        errmsg = tostring(errmsg)
         terminal_write(pos, "[ERROR] " .. errmsg)
         reset_meta(pos, code, errmsg)
     else
         reset_formspec(pos, meta, code, errmsg)
     end
+
+
     return ok, errmsg
 end
 
@@ -451,8 +489,6 @@ end
 -- A.Queue callbacks --
 -----------------------
 
--- // TODO: LIGHTWEIGHT MESECON QUEUE //
--- edit: nvm that would make it unreliable :(
 mesecon.queue:add_function("lc_interrupt", function(pos, luac_id, iid)
     -- There is no luacontroller anymore / it has been reprogrammed / replaced / burnt
     if (minetest.get_meta(pos):get_int("luac_id") ~= luac_id) then return end
