@@ -118,6 +118,13 @@ local function remove_functions(obj)
     if tp == "function" then
         return nil
     end
+    if tp == "userdata" then
+        return nil
+    end
+
+    function is_bad(x)
+        return type(x) == "function" or type(x) == "userdata"
+    end
 
     -- Make sure to not serialize the same table multiple times, otherwise
     -- writing mem.test = mem in the Luacontroller will lead to infinite recursion
@@ -130,7 +137,7 @@ local function remove_functions(obj)
         if type(x) ~= "table" then return end
 
         for key, value in pairs(x) do
-            if type(key) == "function" or type(value) == "function" then
+            if is_bad(key) or is_bad(value) then
                 x[key] = nil
             else
                 if type(key) == "table" then
