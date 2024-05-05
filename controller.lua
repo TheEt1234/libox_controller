@@ -122,7 +122,7 @@ local function remove_functions(obj)
         return nil
     end
 
-    function is_bad(x)
+    local function is_bad(x)
         return type(x) == "function" or type(x) == "userdata"
     end
 
