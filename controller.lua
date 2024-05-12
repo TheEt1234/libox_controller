@@ -24,10 +24,6 @@
 -- Actually the only way to damage the server is to
 -- use too much memory from the sandbox.
 -- IF THIS HAPPENS REPORT IT AS A BUG.
--- You can add more functions to the environment
--- (see where local env is defined)
--- Something nice to play is is appending minetest.env to it.
-
 -----------------
 -- Overheating --
 -----------------
@@ -45,6 +41,8 @@ for k, v in pairs(settings) do
     settings[k] = s or v
 end
 
+settings.allow_functions = minetest.settings:get_bool("libox_controller.allow_functions") or false
+
 local BASENAME = libox_controller.basename
 
 
@@ -55,7 +53,7 @@ local function burn_controller(pos)
     minetest.get_meta(pos):set_string("lc_memory", "");
     -- Wait for pending operations
     minetest.after(0.2, mesecon.receptor_off, pos, mesecon.rules.flat)
-end
+end --
 
 local function overheat(pos)
     if mesecon.do_overheat(pos) then
@@ -114,16 +112,11 @@ local function get_clear(pos)
 end
 
 local function remove_functions(obj)
-    local tp = type(obj)
-    if tp == "function" then
-        return nil
-    end
-    if tp == "userdata" then
-        return nil
-    end
-
     local function is_bad(x)
         return type(x) == "function" or type(x) == "userdata"
+    end
+    if is_bad(obj) then
+        return nil
     end
 
     -- Make sure to not serialize the same table multiple times, otherwise
@@ -212,9 +205,8 @@ local function set_nodetimer_interrupt(pos, time, iid)
     meta:set_string("interrupts", minetest.serialize(interrupts))
 end
 
-
--- The setting affects API so is not intended to be changeable at runtime
 local get_interrupt
+-- The setting affects API so is not intended to be changeable at runtime
 if mesecon.setting("luacontroller_lightweight_interrupts", false) then
     -- use node timer
     get_interrupt = function(pos, _, send_warning)
@@ -223,8 +215,8 @@ if mesecon.setting("luacontroller_lightweight_interrupts", false) then
             if type(time) ~= "nil" and type(time) ~= "number" then
                 error("Delay must be a number to set or nil to cancel")
             end
-            if type(time) == "number" and time < 0.5 then
-                send_warning("Delays of less than 0.5 seconds are not allowed on this server")
+            if type(time) == "number" and time < 0.1 then
+                send_warning("Delays of less than 0.1 seconds are not allowed on this server")
             end
             local ok, warn = validate_iid(iid)
             if ok then set_nodetimer_interrupt(pos, time, iid) end
@@ -254,7 +246,7 @@ else
                     if lightweight then
                         set_nodetimer_interrupt(pos, time, iid)
                     else
-                        mesecon.queue:add_action(pos, "lc_interrupt", { luac_id, iid }, time, iid, 1)
+                        mesecon.queue:add_action(pos, "libox_lc_interrupt", { luac_id, iid }, time, iid, 1)
                     end
                 end
                 if warn then send_warning(warn) end
@@ -262,6 +254,7 @@ else
         end
     end
 end
+
 
 -- itbl: Flat table of functions to run after sandbox cleanup, used to prevent various security hazards
 local function get_digiline_send(pos, itbl, send_warning)
@@ -281,7 +274,7 @@ local function get_digiline_send(pos, itbl, send_warning)
             return false
         end
 
-        local msg, msg_cost = libox.digiline_sanitize(msg, true,
+        local msg, msg_cost = libox.digiline_sanitize(msg, settings.allow_functions,
             function(f)
                 setfenv(f, {})
                 return f
@@ -301,7 +294,7 @@ local function get_digiline_send(pos, itbl, send_warning)
         table.insert(itbl, function()
             -- Runs outside of string metatable sandbox
             local luac_id = minetest.get_meta(pos):get_int("luac_id")
-            mesecon.queue:add_action(pos, "lc_digiline_relay", { channel, luac_id, msg })
+            mesecon.queue:add_action(pos, "libox_lc_digiline_relay", { channel, luac_id, msg })
         end)
         return true
     end
@@ -496,14 +489,14 @@ end
 -- A.Queue callbacks --
 -----------------------
 
-mesecon.queue:add_function("lc_interrupt", function(pos, luac_id, iid)
+mesecon.queue:add_function("libox_lc_interrupt", function(pos, luac_id, iid)
     -- There is no luacontroller anymore / it has been reprogrammed / replaced / burnt
     if (minetest.get_meta(pos):get_int("luac_id") ~= luac_id) then return end
     if (minetest.registered_nodes[minetest.get_node(pos).name].is_burnt) then return end
     libox_controller.run(pos, { type = "interrupt", iid = iid })
 end)
 
-mesecon.queue:add_function("lc_digiline_relay", function(pos, channel, luac_id, msg)
+mesecon.queue:add_function("libox_lc_digiline_relay", function(pos, channel, luac_id, msg)
     if not digilines then return end
     -- This check is only really necessary because in case of server crash, old actions can be thrown into the future
     if (minetest.get_meta(pos):get_int("luac_id") ~= luac_id) then return end
@@ -537,7 +530,7 @@ local digiline = {
     receptor = {},
     effector = {
         action = function(pos, _, channel, msg)
-            msg = libox.digiline_sanitize(msg, true) -- receiver doesn't need wrapping, as that was applied already
+            msg = libox.digiline_sanitize(msg, settings.allow_functions) -- receiver doesn't need wrapping, as that was applied already
             libox_controller.run(pos, { type = "digiline", channel = channel, msg = msg })
         end
     }

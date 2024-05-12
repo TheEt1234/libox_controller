@@ -3,3 +3,4 @@ libox_controller.time_limit (Time limit, in microseconds) int 3000
 libox_controller.memory_max_size (Maximum memory size, in bytes) int 100000
 libox_controller.digiline_channel_maxlen (Maximum digiline channel length) int 256
 libox_controller.digiline_maxlen (Maximum size of digiline message, in bytes) int 50000    
+libox_controller.allow_functions (Allow functions in digiline messages) bool false
