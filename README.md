@@ -1,10 +1,10 @@
-# Libox controller
+# Libox controller (WIP + experimental, like mooncontroller)
 
 - Fork of mooncontroller, that makes use of helper functions from libox
-# Differences
-- Most of the environment is already handled by libox (this also means you get more stuff to play with, like `pcall` and `loadstring`, and also get traceback)
 
-- You can transmit functions through digilines (their environment gets anniliated so you cant really use them for communication)
+# Differences
+
+- Most of the environment is already handled by libox (this also means you get more stuff to play with, like `pcall` and `loadstring`, and also get traceback)
 - Code isn't limited by instructions but by a time limit
 
 
