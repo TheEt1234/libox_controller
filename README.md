@@ -18,7 +18,7 @@ This means that:
 - if the libox controller overheats, you now *know* why because it makes an error message
 - your `digiline_send`s and `interrupt`s get executed even when the libox controller errors, and your memory gets saved too (i think this is a huge qol change)
 
-### Everything is *basically* identical to the mooncontroller
+### Almost everything is *basically* identical to the mooncontroller
 
 # TODOs:
 - user generated libraries
