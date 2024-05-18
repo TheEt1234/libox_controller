@@ -261,6 +261,7 @@ local function get_digiline_send(pos, itbl, send_warning)
     if not minetest.global_exists("digilines") then return end
     local chan_maxlen = settings.digiline_channel_maxlen
     local maxlen = settings.digiline_maxlen
+    local allow_functions = settings.allow_functions
     return function(channel, msg)
         -- NOTE: This runs within string metatable sandbox
 
@@ -275,7 +276,7 @@ local function get_digiline_send(pos, itbl, send_warning)
         end
 
         local msg_cost
-        msg, msg_cost = libox.digiline_sanitize(msg, settings.allow_functions,
+        msg, msg_cost = libox.digiline_sanitize(msg, allow_functions,
             function(f)
                 setfenv(f, {})
                 return f
@@ -364,7 +365,6 @@ end
 -- run (as opposed to run_inner) is responsible for setting up meta according to this output
 local function run_inner(pos, meta, event)
     -- Note: These return success, presumably to avoid changing LC ID.
-    -- everything burned: success!
     if overheat(pos) then return true, "" end
     if ignore_event(event, meta) then return true, "" end
 

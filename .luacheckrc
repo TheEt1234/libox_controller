@@ -7,10 +7,10 @@ read_globals = {
     table = {fields = {
         "copy"
     }},
-    "minetest", "vector", "bit", "ItemStack",
+    "minetest", "vector", "ItemStack",
     "dump", "dump2",
 
-    "mesecon", "digilines", "libox", "default"
+    "mesecon", "digilines", "libox"
 
 }
 
