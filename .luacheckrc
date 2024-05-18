@@ -18,7 +18,6 @@ read_globals = {
     "mesecon",
     "digilines",
     "libox",
-    "default",
     "wrench",
     "mesecons_debug",
     "metatool"
