@@ -67,14 +67,7 @@ function libox_controller.on_receive_fields(pos, _, fields, sender)
                 return
             end
             meta:set_string("terminal_text", "")
-            local ok, err = libox_controller.set_program(pos, fields.code)
-            --if not ok then
-            -- it's not an error from the server perspective
-            -- mean duh
-            -- stil kinda dumb to log this
-            -- so i am just not gonna
-            --minetest.log("action", "Lua controller programming error: " .. tostring(string.split(err, "\n")))
-            --end
+            libox_controller.set_program(pos, fields.code)
         elseif tab == 2 then
             --Terminal tab
             if fields.exit or fields.quit then return end

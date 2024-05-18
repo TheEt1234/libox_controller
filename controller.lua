@@ -274,7 +274,8 @@ local function get_digiline_send(pos, itbl, send_warning)
             return false
         end
 
-        local msg, msg_cost = libox.digiline_sanitize(msg, settings.allow_functions,
+        local msg_cost
+        msg, msg_cost = libox.digiline_sanitize(msg, settings.allow_functions,
             function(f)
                 setfenv(f, {})
                 return f
@@ -395,8 +396,8 @@ local function run_inner(pos, meta, event)
     for _, v in ipairs(itbl) do
         local failure = v()
         if failure then
-            ok = false
-            errmsg = failure
+            success = false
+            msg = failure
         end
     end
 
@@ -502,7 +503,7 @@ mesecon.queue:add_function("libox_lc_digiline_relay", function(pos, channel, lua
     if (minetest.get_meta(pos):get_int("luac_id") ~= luac_id) then return end
     if (minetest.registered_nodes[minetest.get_node(pos).name].is_burnt) then return end
     -- The actual work
-    digilines.receptor_send(pos, digiline.rules.default, channel, msg)
+    digilines.receptor_send(pos, digilines.rules.default, channel, msg)
 end)
 
 -----------------------
@@ -666,7 +667,7 @@ minetest.register_node(BASENAME .. "_burnt", {
     inventory_image = "libox_controller_burnt_top.png",
     is_burnt = true,
     paramtype = "light",
-    light_source = LIGHT_MAX, -- those who are brave will use the burnt luacontroller to explore the caves
+    light_source = minetest.LIGHT_MAX, -- those who are brave will use the burnt luacontroller to explore the caves
     is_ground_content = false,
     groups = { dig_immediate = 2, not_in_creative_inventory = 1 },
     drop = BASENAME .. "0000",

@@ -12,6 +12,8 @@ See the mesecon's and chiepie's version control system log for information about
 
 LGPLv3 can be found below this document
 
+The `.github/workflows/luacheck.yml` file is licensed under the MIT license, see the file for the license itself
+
 ## License of media
 
 The textures of this mod are licensed under CC BY-SA 3.0
