@@ -5,6 +5,7 @@
 Majority of the code is taken from the [mooncontroller mod](https://github.com/mt-mods/mooncontroller) (because this is a fork of the mooncontroller mod), licensed under LGPLv3
 
 The mooncontroller mod is based off of chiepie's luacontroller modifications that can be found [here](https://cheapiesystems.com/git/mesecons/tree/mesecons_luacontroller), licensed too under LGPLv3
+- Also note: the mooncontroller mod did not attribute chiepie, (that's todo in the mod's readme)
 
 All the new code that i wrote is also licened under LGPLv3
 

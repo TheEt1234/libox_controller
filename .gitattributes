@@ -1,0 +1,4 @@
+./screenshot.png export-ignore
+./coverage       export-ignore
+.*               export-ignore
+*.sh             export-ignore
