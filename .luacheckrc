@@ -3,15 +3,25 @@ globals = {
 }
 
 read_globals = {
-    string = {fields = {"split", "trim"}},
-    table = {fields = {
-        "copy"
-    }},
-    "minetest", "vector", "ItemStack",
-    "dump", "dump2",
+    string = { fields = { "split", "trim" } },
+    table = {
+        fields = {
+            "copy"
+        }
+    },
+    "minetest",
+    "vector",
+    "ItemStack",
+    "dump",
+    "dump2",
 
-    "mesecon", "digilines", "libox",
-    "default"
+    "mesecon",
+    "digilines",
+    "libox",
+    "default",
+    "wrench",
+    "mesecons_debug",
+    "metatool"
 
 }
 
@@ -24,6 +34,6 @@ files["examples/*"] = {
         "mem", "port"
     },
     read_globals = {
-        "event","pin","interrupt","digiline_send"
+        "event", "pin", "interrupt", "digiline_send"
     }
 }

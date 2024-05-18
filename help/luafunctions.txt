@@ -1,5 +1,28 @@
 Lua Functions
 =============
 
-The libox_controller uses mainly libox to get its environment...
-you can see the environment with print(_G)
+Most of the standard lua environment is derived from libox, see https://github.com/TheEt1234/libox/blob/master/env_docs.md
+
+But libox_controller adds some things on top of it:
+* pin - the mesecons INPUT table
+* port - the mesecons OUTPUT table
+* event - the reason why the libox controller ran
+* mem - persistant storage of values, unserializable stuff isn't allowed in there
+* heat - the amount of events executed on this libox controller per second
+* heat_max - if heat is above this value the libox_controller will overheat
+* pos - the libox controller's position,
+* print(text, no_new_line) - prints the text to the terminal, 
+-   * optionally when no_new_line is enabled it won't print out a new line...
+-   * if given a table, it creates a readable representation
+* clearterm() - clears the terminal
+* interrupt(time, iid, lightweight) - starts a timer
+-   * once it has finished it will send an interrupt event
+-   * that interrupt event has an iid field, that just returns the iid
+-   * iid must be a string, that's less than 256 characters
+-   * if lightweight mode is enabled, it will use node timers instead of mesecons queue 
+-   * (this helps save server resources by not executing when the controller is unloaded, may even be forced by a setting)
+-   * iid and lightweight arguments are optional
+* digiline_send(channel, msg) - sends a digiline message 
+* conf - The libox_controller configuration
+* code - The code that the luacontroller has been loaded with
+* require - Adds a library from another mod (currently unused)

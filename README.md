@@ -1,16 +1,26 @@
-# Libox controller (WIP + experimental, like mooncontroller)
-
+# Libox controller 
 - Fork of mooncontroller, that makes use of helper functions from libox
 
-# Differences
+# The one huge difference
+Everything, when it can be handled by libox, is handled by libox
 
-- Most of the environment is already handled by libox (this also means you get more stuff to play with, like `pcall` and `loadstring`, and also get traceback)
-- Code isn't limited by instructions but by a time limit
+This means that:
+- The environment is mostly handled by libox, see [libox's env_docs.md](https://github.com/TheEt1234/libox/blob/master/env_docs.md) for the docs of that
+- The code is limited by time, not instructions
+- You get traceback
 
+# Small differences (that i think become game changers)
+- you can't store userdata and threads in `mem` now (not like you can obtain that anyway)
+- *if* enabled (not by default), `digiline_send` can send functions (but their environment gets erased)
+- extra environment stuffs: 
+    - `code` - the code that the luacontroller was ran with
+    - `conf` - the configuration table (*the settings*)
+- if the libox controller overheats, you now *know* why because it makes an error message
+- your `digiline_send`s and `interrupt`s get executed even when the libox controller errors, and your memory gets saved too (i think this is a huge qol change)
 
-Code:
-- LGPLv3, most of it is taken from https://github.com/mt-mods/mooncontroller
+### Everything is *basically* identical to the mooncontroller
 
-Media:
-- textures/*
-- CC-BY-SA 3.0 https://github.com/minetest-mods/mesecons/tree/master/mesecons_luacontroller/textures
+# TODOs:
+- user generated libraries
+- cbd release
+- tests

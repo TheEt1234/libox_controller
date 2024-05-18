@@ -1,6 +1,9 @@
 # 1 milisecond = 1000 microseconds
-libox_controller.time_limit (Time limit, in microseconds) int 3000
-libox_controller.memory_max_size (Maximum memory size, in bytes) int 100000
-libox_controller.digiline_channel_maxlen (Maximum digiline channel length) int 256
-libox_controller.digiline_maxlen (Maximum size of digiline message, in bytes) int 50000    
-libox_controller.allow_functions (Allow functions in digiline messages) bool false
+libox_controller_time_limit (Time limit, in microseconds) int 3000
+libox_controller_memory_max_size (Maximum memory size, in bytes) int 100000
+libox_controller_digiline_channel_maxlen (Maximum digiline channel length) int 256
+libox_controller_digiline_maxlen (Maximum size of digiline message, in bytes) int 50000
+
+# The functions get their environment taken away so its not as bad as you may think
+# Btw they are impossible to serialize
+libox_controller_allow_functions (Allow functions in digiline messages) bool false

@@ -5,25 +5,11 @@
 --       |       |  | |\ |  |  |_| |  | |  |  |_ |_|
 --  libox|______ |__| | \|  |  | \ |__| |_ |_ |_ |\
 --
---
+-- yeah so about itbl
+-- back in the day they used it as a way to escape string sandbox (so do something like libox.sandbox_libf)
+-- until they discovered getmetatable("").__index
+-- and i think it got stuck as legacy code
 
--- Reference
--- ports = get_real_port_states(pos): gets if inputs are powered from outside
--- newport = merge_port_states(state1, state2): just does result = state1 or state2 for every port
--- set_port(pos, rule, state): activates/deactivates the mesecons according to the port states
--- set_port_states(pos, ports): Applies new port states to a Luacontroller at pos
--- run_inner(pos, code, event): runs code on the controller at pos and event
--- reset_formspec(pos, code, errmsg): installs new code and prints error messages, without resetting LCID
--- reset_meta(pos, code, errmsg): performs a software-reset, installs new code and prints error message
--- run(pos, event): a wrapper for run_inner which gets code & handles errors via reset_meta
--- resetn(pos): performs a hardware reset, turns off all ports
-
--- The Sandbox
--- The whole code of the controller runs in a sandbox,
--- a very restricted environment.
--- Actually the only way to damage the server is to
--- use too much memory from the sandbox.
--- IF THIS HAPPENS REPORT IT AS A BUG.
 -----------------
 -- Overheating --
 -----------------
@@ -36,7 +22,7 @@ local settings = {
 }
 
 for k, v in pairs(settings) do
-    local s = minetest.settings:get("libox_controller." .. k)
+    local s = minetest.settings:get("libox_controller_" .. k)
     s = tonumber(s) or s
     settings[k] = s or v
 end
@@ -81,6 +67,9 @@ end
 -- Parsing and running --
 -------------------------
 
+local libf = libox.sandbox_lib_f
+-- the string sandbox escaper, gone are the days of doing it manually
+
 local function terminal_write(pos, text, nolf)
     local meta = minetest.get_meta(pos)
     local oldtext = meta:get_string("terminal_text")
@@ -90,18 +79,15 @@ local function terminal_write(pos, text, nolf)
 end
 
 
+
 local function get_safe_print(pos)
     return function(param, nolf)
-        local string_meta = getmetatable("")
-        local sandbox = string_meta.__index
-        string_meta.__index = string -- Leave string sandbox temporarily
         if param == nil then param = "" end
         if type(param) == "string" then
             terminal_write(pos, param, nolf)
         else
             terminal_write(pos, dump(param), nolf)
         end
-        string_meta.__index = sandbox -- Restore string sandbox
     end
 end
 
@@ -113,8 +99,9 @@ end
 
 local function remove_functions(obj)
     local function is_bad(x)
-        return type(x) == "function" or type(x) == "userdata"
+        return type(x) == "function" or type(x) == "userdata" or type(x) == "thread" -- the nasty 3
     end
+
     if is_bad(obj) then
         return nil
     end
@@ -313,6 +300,8 @@ local function create_environment(pos, mem, event, itbl, send_warning)
     -- from breaking a library and messing up other Luacontrollers.
     local env = libox.create_basic_environment()
 
+    -- the basic luacontroller library
+    -- i shall call it lclib
     local env_add = {
         pin = libox_controller.merge_port_states(vports, rports),
         port = vports_copy,
@@ -322,9 +311,9 @@ local function create_environment(pos, mem, event, itbl, send_warning)
         heat_max = mesecon.setting("overheat_max", 20),
         pos = { x = pos.x, y = pos.y, z = pos.z },
         print = get_safe_print(pos),
-        clearterm = get_clear(pos),
-        interrupt = get_interrupt(pos, itbl, send_warning),
-        digiline_send = get_digiline_send(pos, itbl, send_warning),
+        clearterm = libf(get_clear(pos)),
+        interrupt = libf(get_interrupt(pos, itbl, send_warning)),
+        digiline_send = libf(get_digiline_send(pos, itbl, send_warning)),
         conf = table.copy(settings),
         code = minetest.get_meta(pos):get_string("code"),
     }
@@ -333,7 +322,7 @@ local function create_environment(pos, mem, event, itbl, send_warning)
         env[k] = v
     end
 
-    env.require = libox_controller.get_require(pos, env)
+    env.require = libf(libox_controller.get_require(pos, env))
 
     return env
 end
@@ -355,9 +344,9 @@ local function save_memory(pos, meta, mem)
         meta:set_string("lc_memory", memstring)
         meta:mark_as_private("lc_memory")
     else
-        print("Error: Luacontroller memory overflow. " .. memsize_max .. " bytes available, "
-            .. #memstring .. " required. Controller overheats.")
         burn_controller(pos)
+        return "Luacontroller memory overflow. " .. memsize_max .. " bytes available, "
+            .. #memstring .. " required. Controller overheats"
     end
 end
 
@@ -365,7 +354,7 @@ end
 -- run (as opposed to run_inner) is responsible for setting up meta according to this output
 local function run_inner(pos, meta, event)
     -- Note: These return success, presumably to avoid changing LC ID.
-    if overheat(pos) then return true, "" end
+    if overheat(pos) then return true, "[ERROR] Too much heat, overheated." end
     if ignore_event(event, meta) then return true, "" end
 
     -- Load code & mem from meta
@@ -386,11 +375,70 @@ local function run_inner(pos, meta, event)
     local success, msg = libox.normal_sandbox({
         env = env,
         code = meta:get_string("code"),
-        hook_time = 10,
+        hook_time = 50, --[[
+            Hook time is basically uhh
+            "How often should the hook function be called"
+            When i have it set to 100, it calls the hook function every 100 instructions
+
+            This number should be a tight balance between stability and security
+
+            If this number is set too high, it is vurnable to
+            x = "."
+            repeat
+                x = x .. x
+            until false
+
+            If it's too low, then you will get totally random/absurd timeouts for seemingly no reason
+
+            The number 50 seems to just work, 75 is just too much
+
+            PROGRAMS TO TEST:
+            1) If it's too high:
+
+                local t1 = minetest.get_us_time()
+                x = "."
+                for i=1,40 do
+                x = x .. x
+                end
+                print("time: "..minetest.get_us_time()-t1)
+                -- Activate this a few times/second, if hook time is too high it will create lag
+            2) If it's too low:
+                local cache = {
+                    [0] = 0,
+                    [1] = 1,
+                    [2] = 1,
+                }
+                function fib(n)
+                    if cache[n] then return cache[n] end
+                    return fib(n-2) + fib(n-1)
+                end
+
+                local t1 = minetest.get_us_time()
+                print(fib(16))
+                print("t:"..minetest.get_us_time()-t1)
+                -- Press send on the terminal a bunch of times, if t: is VERY inconsistant or high then the hook time is too low
+
+            Also, the code on the hook is very very simple
+            local time = minetest.get_us_time
+            local current_time = time() -- misleading name sorry
+            debug.sethook(function()
+                if time() - current_time > max_time then
+                    debug.sethook()
+                    error("Code timed out...")
+                end
+            end, blabla...)
+            just an if statement, 3 instructions
+
+            Also user code is NOT jit compiled (i wish, i really do... but that would require somehow interrupting `repeat until false`)
+                ]]
         max_time = settings.time_limit
     })
 
-    save_memory(pos, meta, env.mem) -- save memory regardless of error
+    local mem_save_error = save_memory(pos, meta, env.mem)
+    if mem_save_error ~= nil then -- save memory regardless of error
+        success = false
+        msg = mem_save_error
+    end
 
     -- Execute deferred tasks regardless of error
     for _, v in ipairs(itbl) do
@@ -486,9 +534,14 @@ local function node_timer(pos)
     return false
 end
 
------------------------
--- A.Queue callbacks --
------------------------
+-------------------------------------
+-- Mesecons ActionQueue™ callbacks --
+-------------------------------------
+
+--[[
+    Due to a mod we have to say libox_lc_x instead of just lc_x
+    i mean thats fair
+]]
 
 mesecon.queue:add_function("libox_lc_interrupt", function(pos, luac_id, iid)
     -- There is no luacontroller anymore / it has been reprogrammed / replaced / burnt
@@ -699,6 +752,7 @@ minetest.register_node(BASENAME .. "_burnt", {
 ------------------------
 -- Craft Registration --
 ------------------------
+
 
 minetest.register_craft({
     output = BASENAME .. "0000 3",

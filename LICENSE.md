@@ -22,7 +22,11 @@ The textures of this mod are licensed under CC BY-SA 3.0
 
 The CC BY-SA license can be found at https://creativecommons.org/licenses/by-sa/3.0/ 
 
-
+`support.lua`
+- All of the following are modified in some way:
+- The metatool support is by SX, can be found at https://github.com/S-S-X/metatool/blob/master/luatool/nodes/luacontroller.lua the license is in the source code of `support.lua` 
+- The wrench support is by mt-mods, can be found at https://github.com/mt-mods/wrench/blob/master/nodes/mesecons_luacontroller.lua it is licensed as LGPLv2.1, the license can be found [here](https://github.com/mt-mods/wrench/blob/master/LICENSE)
+- The mesecons_debug support is by BuckarooBanzay, licensed under the MIT license, can be found at https://github.com/minetest-monitoring/mesecons_debug/blob/master/overrides/node_timers.lua the license can be found in the source code of `support.lua`
 ===============================================================
 
 # GNU LESSER GENERAL PUBLIC LICENSE

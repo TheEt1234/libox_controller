@@ -10,7 +10,7 @@ dofile(MP .. "/ui.lua")
 dofile(MP .. "/libraries.lua")
 dofile(MP .. "/port_states.lua")
 dofile(MP .. "/controller.lua")
-
+dofile(MP .. "/support.lua")
 if minetest.get_modpath("mtt") then
     dofile(MP .. "/controller.spec.lua")
 end
