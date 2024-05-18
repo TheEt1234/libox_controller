@@ -510,6 +510,13 @@ end)
 -- Node Registration --
 -----------------------
 
+local sound
+if minetest.global_exists("default") then
+    sound = default.node_sound_stone_defaults()
+else
+    sound = nil
+end
+
 local output_rules = {}
 local input_rules = {}
 
@@ -626,7 +633,7 @@ for a = 0, 1 do -- 0 = off  1 = on
                     node_box = node_box,
                     on_construct = reset_meta,
                     on_receive_fields = libox_controller.on_receive_fields,
-                    sounds = default.node_sound_stone_defaults(),
+                    sounds = sound,
                     mesecons = mesecons,
                     digiline = digiline,
                     -- Virtual portstates are the ports that
@@ -676,7 +683,7 @@ minetest.register_node(BASENAME .. "_burnt", {
     node_box = node_box,
     on_construct = reset_meta,
     on_receive_fields = libox_controller.on_receive_fields,
-    sounds = default.node_sound_stone_defaults(),
+    sounds = sound,
     virtual_portstates = { a = false, b = false, c = false, d = false },
     mesecons = {
         effector = {

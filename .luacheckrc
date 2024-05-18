@@ -10,7 +10,8 @@ read_globals = {
     "minetest", "vector", "ItemStack",
     "dump", "dump2",
 
-    "mesecon", "digilines", "libox"
+    "mesecon", "digilines", "libox",
+    "default"
 
 }
 
