@@ -753,7 +753,7 @@ minetest.register_craft({
     output = BASENAME .. "0000 3",
     recipe = {
         { 'mesecons_luacontroller:luacontroller0000', 'group:mesecon_conductor_craftable', 'mesecons_luacontroller:luacontroller0000' },
-        { 'mesecons_luacontroller:luacontroller0000', 'group:mesecon_conductor_craftable', 'mesecons_luacontroller:luacontroller0000' },
+        { 'mesecons_luacontroller:luacontroller0000', 'mesecons_materials:silicon',        'mesecons_luacontroller:luacontroller0000' },
         { 'mesecons_luacontroller:luacontroller0000', 'group:mesecon_conductor_craftable', 'mesecons_luacontroller:luacontroller0000' },
     }
 })
