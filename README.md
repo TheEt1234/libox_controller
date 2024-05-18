@@ -9,16 +9,21 @@ This means that:
 - The code is limited by time, not instructions
 - You get traceback
 
-# Small differences (that i think become game changers)
+# Small differences
 - you can't store userdata and threads in `mem` now (not like you can obtain that anyway)
 - *if* enabled (not by default), `digiline_send` can send functions (but their environment gets erased)
 - extra environment stuffs: 
     - `code` - the code that the luacontroller was ran with
     - `conf` - the configuration table (*the settings*)
-- if the libox controller overheats, you now *know* why because it makes an error message
+- if the libox controller overheats, you now *know* why (memory or overheated) because it makes an error message
 - your `digiline_send`s and `interrupt`s get executed even when the libox controller errors, and your memory gets saved too (i think this is a huge qol change)
 
-### Almost everything is *basically* identical to the mooncontroller
+# Oh yeah also the support (different from the mooncontroller also)
+- wrench: the libox controller can now be picked up by a wrench
+- luatool: can be operated by luatool
+- mesecons_debug: lightweight interrupts now respect penalty
+
+### Almost everything besides that is *basically* identical to the mooncontroller
 
 # TODOs:
 - user generated libraries
