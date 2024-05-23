@@ -151,7 +151,25 @@ local function validate_iid(iid)
     -- non-string and non-nil type interrupt
     return false, "Non-string interrupt IDs are invalid"
 end
+--[[
+    Mooncontroller lightweight interrupts, ah
 
+    i really don't like them.... like... luacontroller supports interrupts that are 0.5s
+    Why can't mooncontroller??? oh because iids
+    they are also using os.time to do things which has limited precision
+
+    Great... let's see what we can do
+
+    Oh.... the node timer supports only one timer.... oh....
+
+    Welll we can still do something right...
+    Or you know what... let's just not bother.
+
+    Also no, i tried, you can't replace the time_function with minetest.get_us_time, it doesn't return wall time, so crap will get messed up
+]]
+
+
+local time_function = os.time
 local function get_next_nodetimer_interrupt(interrupts)
     local nextint = 0
     for _, v in pairs(interrupts) do
@@ -165,7 +183,7 @@ end
 local function get_current_nodetimer_interrupts(interrupts)
     local current = {}
     for k, v in pairs(interrupts) do
-        if v <= os.time() then
+        if v <= time_function() then
             table.insert(current, k)
         end
     end
@@ -180,11 +198,11 @@ local function set_nodetimer_interrupt(pos, time, iid)
     if time == nil then
         interrupts[iid] = nil
     else
-        interrupts[iid] = os.time() + time
+        interrupts[iid] = time_function() + time
     end
     local nextint = get_next_nodetimer_interrupt(interrupts)
     if nextint then
-        timer:start(nextint - os.time())
+        timer:start(nextint - time_function())
     end
     meta:set_string("interrupts", minetest.serialize(interrupts))
 end
@@ -194,7 +212,7 @@ local get_interrupt
 if mesecon.setting("luacontroller_lightweight_interrupts", false) then
     -- use node timer
     get_interrupt = function(pos, send_warning)
-        return (function(time, iid, lightweight)
+        return libf(function(time, iid, lightweight)
             if lightweight == false then send_warning("Interrupts are always lightweight on this server") end
             if type(time) ~= "nil" and type(time) ~= "number" then
                 error("Delay must be a number to set or nil to cancel")
