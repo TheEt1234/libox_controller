@@ -18,6 +18,11 @@ local settings = {
     time_limit = 3000,             -- in microseconds, 1 milisecond = 1000 microseconds
 }
 
+local sound
+if mesecon.node_sound then
+    sound = mesecon.node_sound.stone
+end
+
 for k, v in pairs(settings) do
     local s = minetest.settings:get("libox_controller_" .. k)
     s = tonumber(s) or s
@@ -193,7 +198,7 @@ end
 local function set_nodetimer_interrupt(pos, time, iid)
     if time < 1 then -- and no, this single if statement isn't guarding you from the dream of interrupt(0)
         error(
-        "Sorry, lightweight interrupts under 1 second aren't supported (mooncontroller does lightweight interrupts weirdly)")
+            "Sorry, lightweight interrupts under 1 second aren't supported (mooncontroller does lightweight interrupts weirdly)")
     end
     if type(iid) ~= "string" then iid = "" end
     local meta = minetest.get_meta(pos)
@@ -680,7 +685,7 @@ for a = 0, 1 do -- 0 = off  1 = on
                     node_box = node_box,
                     on_construct = reset_meta,
                     on_receive_fields = libox_controller.on_receive_fields,
-                    sounds = mesecon.node_sound.stone,
+                    sounds = sound,
                     mesecons = mesecons,
                     digiline = digiline,
                     -- Virtual portstates are the ports that
@@ -730,7 +735,7 @@ minetest.register_node(BASENAME .. "_burnt", {
     node_box = node_box,
     on_construct = reset_meta,
     on_receive_fields = libox_controller.on_receive_fields,
-    sounds = mesecon.node_sound.stone,
+    sounds = sound,
     virtual_portstates = { a = false, b = false, c = false, d = false },
     mesecons = {
         effector = {
