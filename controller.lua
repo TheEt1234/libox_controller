@@ -5,10 +5,7 @@
 --       |       |  | |\ |  |  |_| |  | |  |  |_ |_|
 --  libox|______ |__| | \|  |  | \ |__| |_ |_ |_ |\
 --
--- yeah so about itbl
--- back in the day they used it as a way to escape string sandbox (so do something like libox.sandbox_libf)
--- until they discovered getmetatable("").__index
--- and i think it got stuck as legacy code
+-- api changes: uses libox and no itbl
 
 -----------------
 -- Overheating --
@@ -196,14 +193,11 @@ local get_interrupt
 -- The setting affects API so is not intended to be changeable at runtime
 if mesecon.setting("luacontroller_lightweight_interrupts", false) then
     -- use node timer
-    get_interrupt = function(pos, _, send_warning)
+    get_interrupt = function(pos, send_warning)
         return (function(time, iid, lightweight)
             if lightweight == false then send_warning("Interrupts are always lightweight on this server") end
             if type(time) ~= "nil" and type(time) ~= "number" then
                 error("Delay must be a number to set or nil to cancel")
-            end
-            if type(time) == "number" and time < 0.1 then
-                send_warning("Delays of less than 0.1 seconds are not allowed on this server")
             end
             local ok, warn = validate_iid(iid)
             if ok then set_nodetimer_interrupt(pos, time, iid) end
@@ -212,10 +206,9 @@ if mesecon.setting("luacontroller_lightweight_interrupts", false) then
     end
 else
     -- use global action queue
-    -- itbl: Flat table of functions to run after sandbox cleanup, used to prevent various security hazards
-    get_interrupt = function(pos, itbl, send_warning)
+    get_interrupt = function(pos, send_warning)
         -- iid = interrupt id
-        return function(time, iid, lightweight)
+        return libf(function(time, iid, lightweight)
             -- NOTE: This runs within string metatable sandbox, so don't *rely* on anything of the form (""):y
             -- Hence the values get moved out. Should take less time than original, so totally compatible
             if lightweight then
@@ -225,31 +218,26 @@ else
             else
                 if type(time) ~= "number" then error("Delay must be a number") end
             end
-            table.insert(itbl, function()
-                -- Outside string metatable sandbox, can safely run this now
-                local luac_id = minetest.get_meta(pos):get_int("luac_id")
-                local ok, warn = validate_iid(iid)
-                if ok then
-                    if lightweight then
-                        set_nodetimer_interrupt(pos, time, iid)
-                    else
-                        mesecon.queue:add_action(pos, "libox_lc_interrupt", { luac_id, iid }, time, iid, 1)
-                    end
+            local luac_id = minetest.get_meta(pos):get_int("luac_id")
+            local ok, warn = validate_iid(iid)
+            if ok then
+                if lightweight then
+                    set_nodetimer_interrupt(pos, time, iid)
+                else
+                    mesecon.queue:add_action(pos, "libox_lc_interrupt", { luac_id, iid }, time, iid, 1)
                 end
-                if warn then send_warning(warn) end
-            end)
-        end
+            end
+            if warn then send_warning(warn) end
+        end)
     end
 end
 
-
--- itbl: Flat table of functions to run after sandbox cleanup, used to prevent various security hazards
-local function get_digiline_send(pos, itbl, send_warning)
+local function get_digiline_send(pos, send_warning)
     if not minetest.global_exists("digilines") then return end
     local chan_maxlen = settings.digiline_channel_maxlen
     local maxlen = settings.digiline_maxlen
     local allow_functions = settings.allow_functions
-    return function(channel, msg)
+    return libf(function(channel, msg)
         -- NOTE: This runs within string metatable sandbox
 
         if type(channel) == "string" then
@@ -280,16 +268,14 @@ local function get_digiline_send(pos, itbl, send_warning)
             return false
         end
 
-        table.insert(itbl, function()
-            -- Runs outside of string metatable sandbox
-            local luac_id = minetest.get_meta(pos):get_int("luac_id")
-            mesecon.queue:add_action(pos, "libox_lc_digiline_relay", { channel, luac_id, msg })
-        end)
+        local luac_id = minetest.get_meta(pos):get_int("luac_id")
+        mesecon.queue:add_action(pos, "libox_lc_digiline_relay", { channel, luac_id, msg })
+
         return true
-    end
+    end)
 end
 
-local function create_environment(pos, mem, event, itbl, send_warning)
+local function create_environment(pos, mem, event, send_warning)
     -- Gather variables for the environment
     local vports = minetest.registered_nodes[minetest.get_node(pos).name].virtual_portstates
     local vports_copy = {}
@@ -312,8 +298,8 @@ local function create_environment(pos, mem, event, itbl, send_warning)
         pos = { x = pos.x, y = pos.y, z = pos.z },
         print = get_safe_print(pos),
         clearterm = libf(get_clear(pos)),
-        interrupt = libf(get_interrupt(pos, itbl, send_warning)),
-        digiline_send = libf(get_digiline_send(pos, itbl, send_warning)),
+        interrupt = libf(get_interrupt(pos, send_warning)),
+        digiline_send = libf(get_digiline_send(pos, send_warning)),
         conf = table.copy(settings),
         code = minetest.get_meta(pos):get_string("code"),
     }
@@ -368,8 +354,7 @@ local function run_inner(pos, meta, event)
     end
 
     -- Create environment
-    local itbl = {}
-    local env = create_environment(pos, mem, event, itbl, send_warning)
+    local env = create_environment(pos, mem, event, send_warning)
 
     -- Create the sandbox and execute code
     local success, msg = libox.normal_sandbox({
@@ -440,14 +425,6 @@ local function run_inner(pos, meta, event)
         msg = mem_save_error
     end
 
-    -- Execute deferred tasks regardless of error
-    for _, v in ipairs(itbl) do
-        local failure = v()
-        if failure then
-            success = false
-            msg = failure
-        end
-    end
 
     if not success then return false, msg end
     if type(env.port) ~= "table" then
