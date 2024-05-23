@@ -1,6 +1,6 @@
 The environment is mostly handled by libox, see [libox's env_docs.md](https://github.com/TheEt1234/libox/blob/master/env_docs.md) for the docs of that....
 
-# But what isn't handled by libox:
+# But what isn't handled by libox (is given by this mod):
 
 * pin - the mesecons INPUT table
 * port - the mesecons OUTPUT table

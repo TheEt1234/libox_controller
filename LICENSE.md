@@ -25,7 +25,7 @@ The `.github/workflows/luacheck.yml` file is licensed under the MIT license, see
 
 The textures of this mod are licensed under CC BY-SA 3.0
 `textures/libox_controller_*` are modifications of the existing textures in mesecons  
-`textures/jeija_*` are unmodified copies of the textures in mesecons
+`textures/jeija_*` are unmodified copies of the textures in mesecons  
 
 The CC BY-SA license can be found at https://creativecommons.org/licenses/by-sa/3.0/ 
 
