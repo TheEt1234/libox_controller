@@ -11,12 +11,11 @@ local set_program = libox_controller.set_program
 
 local old_setings = table.copy(libox_controller.settings)
 
-local function override_settings(new_settings)
-    libox_controller.settings = new_settings -- yes this is a pointless setter lol
-end
 
 local function setup()
-    minetest.place_node(pos, libox_controller.basename .. "0000")
+    minetest.place_node(pos, {
+        name = libox_controller.basename .. "0000"
+    })
     libox_controller.settings = old_setings -- restore to normal
 end
 
