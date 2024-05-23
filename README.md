@@ -17,7 +17,6 @@ This means that:
     - `conf` - the configuration table (*the settings*)
 - if the libox controller overheats, you now *know* why (memory or overheated) because it makes an error message
 - your `digiline_send`s and `interrupt`s get executed even when the libox controller errors, and your memory gets saved too (i think this is a huge qol change)
-- If lightweight interrupts are forced, you don't have that annoying 1 second limit anymore
 
 # Mostly technical differences
 - Doesn't use itbl anymore, instead doing string sandbox escaping
