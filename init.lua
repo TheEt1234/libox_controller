@@ -11,6 +11,6 @@ dofile(MP .. "/libraries.lua")
 dofile(MP .. "/port_states.lua")
 dofile(MP .. "/controller.lua")
 dofile(MP .. "/support.lua")
-if minetest.get_modpath("mtt") then
+if minetest.global_exists("mtt") and mtt.enabled then
     dofile(MP .. "/controller.spec.lua")
 end

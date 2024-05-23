@@ -20,7 +20,8 @@ read_globals = {
     "libox",
     "wrench",
     "mesecons_debug",
-    "metatool"
+    "metatool",
+    "mtt"
 
 }
 

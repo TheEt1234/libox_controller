@@ -16,10 +16,12 @@ local settings = {
     digiline_maxlen = 50000,       -- in bytes
     memory_max_size = 100000,      -- in serialized characters (whatever minetest feels like doing lmao, 1 byte/character + 25)
     time_limit = 3000,             -- in microseconds, 1 milisecond = 1000 microseconds
+    lightweight_interrupts = mesecon.setting("luacontroller_lightweight_interrupts", false)
+    -- lightweight interrupts can't be changed in runtime
 }
 
 local sound
-if mesecon.node_sound then
+if mesecon.node_sound then -- YES this can happen where there is no node_sound
     sound = mesecon.node_sound.stone
 end
 
@@ -29,7 +31,9 @@ for k, v in pairs(settings) do
     settings[k] = s or v
 end
 
-settings.allow_functions = minetest.settings:get_bool("libox_controller.allow_functions") or false
+settings.allow_functions = minetest.settings:get_bool("libox_controller_allow_functions") or false
+
+libox_controller.settings = settings -- allow override in tests later
 
 local BASENAME = libox_controller.basename
 
@@ -218,7 +222,7 @@ end
 
 local get_interrupt
 -- The setting affects API so is not intended to be changeable at runtime
-if mesecon.setting("luacontroller_lightweight_interrupts", false) then
+if settings.lightweight_interrupts then
     -- use node timer
     get_interrupt = function(pos, send_warning)
         return libf(function(time, iid, lightweight)

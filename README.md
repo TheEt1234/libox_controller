@@ -30,6 +30,11 @@ This means that:
 
 ### Almost everything besides that is *basically* identical to the mooncontroller
 
+# Test goals
+- 100% test coverage would probably be a very dumb goal to set
+- So instead, the goal is to have 90+% coverage of `controller.lua`
+- Tests are not done on mtg but rather on mystery mtt game (probably airgame, that is good btw)
+
 # TODOs:
 - user generated libraries
 - cbd release
