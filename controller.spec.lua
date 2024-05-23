@@ -13,7 +13,7 @@ local old_setings = table.copy(libox_controller.settings)
 
 
 local function setup()
-    mtt.emerge_area({ x = 0, y = 0, z = 0 }, { x = 0, y = 0, z = 0 })
+    mtt.emerge_area({ x = 0, y = 0, z = 0 }, { x = 32, y = 32, z = 32 })
     minetest.place_node(pos, {
         name = libox_controller.basename .. "0000"
     })
