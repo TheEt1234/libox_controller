@@ -11,5 +11,5 @@ jobs:
         enable_coverage: "true"
         git_dependencies: https://github.com/TheEt1234/libox https://github.com/minetest-mods/mesecons https://github.com/minetest-mods/digilines
         additional_config: |
-          secure.trusted_mods = "libox"
+          secure.trusted_mods = mtt, libox
     - uses: coverallsapp/github-action@v1
