@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/github/TheEt1234/libox_controller/badge.svg)](https://coveralls.io/github/TheEt1234/libox_controller)
+
 # Libox controller 
 - Fork of mooncontroller, that makes use of helper functions from libox
 
