@@ -191,6 +191,10 @@ local function get_current_nodetimer_interrupts(interrupts)
 end
 
 local function set_nodetimer_interrupt(pos, time, iid)
+    if time < 1 then -- and no, this single if statement isn't guarding you from the dream of interrupt(0)
+        error(
+        "Sorry, lightweight interrupts under 1 second aren't supported (mooncontroller does lightweight interrupts weirdly)")
+    end
     if type(iid) ~= "string" then iid = "" end
     local meta = minetest.get_meta(pos)
     local timer = minetest.get_node_timer(pos)
