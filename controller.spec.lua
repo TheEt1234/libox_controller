@@ -1,7 +1,49 @@
 -- so, for the setup
 -- we need to place 1 libox_controller somewhere
 
+-- mesecon queue emulator i guess
+-- lmfao
+-- because we cant really like... ya know use mesecon queue...?
+-- also nobody is gonna stop me from using table.foreachi i love my table.foreachi
 
+
+-- anyway enjoy this brainrot
+-- i hate every single line of code written here about mesecon queue
+local mesecon_queue = { funcs = {}, actions = {} }
+local mesecon_queue_meta = {
+    __index = {
+        add_function = function(self, name, func)
+            self.funcs[name] = func
+        end,
+        add_action = function(self, pos, func, params, _, _, _)
+            -- we ignore like 3 values for simplicity
+            local action = {
+                pos = pos,
+                func = func,
+                params = params or {},
+            }
+            table.insert(self.actions, action)
+        end,
+    },
+    __call = function()
+        local to_delete = {}
+        local t = table.copy(mesecon_queue.actions) -- idk the behaviour of foreachi man
+        for k, v in pairs(t) do
+            to_delete[#to_delete + 1] = k
+            minetest.log("EXECUTING " .. v.func .. " ACTION")
+            table.insert(v.params, 1, v.pos)
+            mesecon_queue.funcs[v.func](unpack(v.params))
+        end
+        for _, v in ipairs(to_delete) do
+            mesecon_queue.actions[v] = nil
+        end
+    end
+}
+
+setmetatable(mesecon_queue, mesecon_queue_meta)
+mesecon_queue.funcs = mesecon.queue.funcs
+
+mesecon.queue = mesecon_queue
 
 local pos = vector.new({
     x = 0, y = 0, z = 0
@@ -12,45 +54,54 @@ local set_program = libox_controller.set_program
 local old_setings = table.copy(libox_controller.settings)
 
 
-local function setup()
-    minetest.place_node(pos, {
+local function setup(other_pos)
+    minetest.set_node(other_pos or pos, {
         name = libox_controller.basename .. "0000"
     })
+    minetest.registered_nodes[libox_controller.basename .. "0000"].on_construct(pos)
     libox_controller.settings = old_setings -- restore to normal
 end
 
-mtt.emerge_area({ x = 0, y = 0, z = 0 }, { x = 32, y = 32, z = 32 })
+
+mtt.emerge_area({ x = 0, y = 0, z = 0 }, { x = 0, y = 0, z = 0 })
+
 mtt.register("terminal stuffs", function(callback)
     setup()
-    set_program(pos, [[
-        print("Hello world")
-        if event == "do it lol" then
+
+    assert(set_program(pos, [[
+        if event.type=="program" then
+            print("Hello world")
+        elseif event == "do it lol" then
             clearterm()
         end
-    ]])
+    ]]))
     local meta = minetest.get_meta(pos)
     assert(meta:get_string("terminal_text") == "Hello world")
 
-    run(pos, "do it lol")
+    assert(run(pos, "do it lol"))
 
     assert(meta:get_string("terminal_text") == "")
     callback()
 end)
+
 --[[
     Do note: the lightweight interrupt setting cannot be changed at runtime!
 ]]
 
+mtt.emerge_area({ x = 0, y = 0, z = 0 }, { x = 0, y = 0, z = 0 })
+
 mtt.register("it burns + interrupts", function(callback)
     setup()
 
-    set_program(pos, [[
+    assert(set_program(pos, [[
         interrupt(0, "", false)
-    ]])
-
-    minetest.after(3, function()
-        assert(minetest.get_node(pos).name == libox_controller.basename .. "_burnt")
-        callback()
-    end)
+    ]]))
+    -- ok now time to execute tem globalsteps
+    for _ = 1, 100 do
+        mesecon_queue()
+    end
+    assert(minetest.get_node(pos).name == libox_controller.basename .. "_burnt")
+    callback()
 end)
 
 mtt.register("Doesn't allow the nasty in mem", function(callback)
@@ -67,9 +118,14 @@ mtt.register("Doesn't allow the nasty in mem", function(callback)
 end)
 
 mtt.register("Lightweight interrupts work correctly", function(callback)
-    setup()
+    local my_pos = {
+        x = 0,
+        y = 1,
+        z = 0
+    }
+    setup(my_pos)
 
-    set_program(pos, [[
+    set_program(my_pos, [[
         if event.type=="program" then
             interrupt(1, "hi", true)
         elseif event.type=="interrupt" and event.iid == "hi" then
@@ -81,8 +137,8 @@ mtt.register("Lightweight interrupts work correctly", function(callback)
             }
         end
     ]])
-    minetest.after(2, function()
-        assert(minetest.get_node(pos).name == libox_controller.basename .. "1111")
-        callback()
+    callback()
+    minetest.after(3, function()
+        assert(minetest.get_node(my_pos).name == libox_controller.basename .. "1111")
     end)
 end)
