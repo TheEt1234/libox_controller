@@ -1,14 +1,17 @@
 -- so, for the setup
 -- we need to place 1 libox_controller somewhere
 
--- mesecon queue emulator i guess
--- lmfao
--- because we cant really like... ya know use mesecon queue...?
--- also nobody is gonna stop me from using table.foreachi i love my table.foreachi
-
 
 -- anyway enjoy this brainrot
 -- i hate every single line of code written here about mesecon queue
+
+-- luacheck: ignore
+
+
+-- mesecon queue emulator i guess
+-- lmfao
+-- because we cant really like... ya know use mesecon queue...? because it requires globalsteps
+
 local mesecon_queue = { funcs = {}, actions = {} }
 local mesecon_queue_meta = {
     __index = {
@@ -16,7 +19,7 @@ local mesecon_queue_meta = {
             self.funcs[name] = func
         end,
         add_action = function(self, pos, func, params, _, _, _)
-            -- we ignore like 3 values for simplicity
+            -- we ignore like 3 values for simplicity, who cares if time is all jumbled up
             local action = {
                 pos = pos,
                 func = func,
