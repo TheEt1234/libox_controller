@@ -103,6 +103,7 @@ mtt.register("it burns + interrupts", function(callback)
     for _ = 1, 100 do
         mesecon_queue()
     end
+
     assert(minetest.get_node(pos).name == libox_controller.basename .. "_burnt")
     callback()
 end)
@@ -116,6 +117,12 @@ mtt.register("Doesn't allow the nasty in mem", function(callback)
         }
         mem.y = mem
     ]])
+
+    assert(not select(1, set_program(pos, [[
+        mem = string.rep("a", 64000)
+        mem = mem .. mem
+    ]])
+    ))
 
     callback()
 end)
