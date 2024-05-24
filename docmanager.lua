@@ -32,7 +32,7 @@ local included_examples = {
     ["R/S Latch"] = "rslatch.lua",
     ["Clock"] = "clock.lua",
     ["LCD Counter"] = "counter.lua",
-    ["Executing code from the terminal"] = "terminal_execute.lua"
+    ["Executing code from the terminal"] = "terminal_execute.lua",
 }
 
 for k, v in pairs(included_examples) do
@@ -68,6 +68,7 @@ local included_help_order = {
     "Terminal I/O",
     "Digilines I/O",
     "Interrupts",
+    "Differences from mooncontroller"
 }
 
 local included_help_content = {
@@ -78,6 +79,7 @@ local included_help_content = {
     ["Terminal I/O"] = "terminal.txt",
     ["Digilines I/O"] = "digilines.txt",
     ["Interrupts"] = "interrupts.txt",
+    ["Differences from mooncontroller"] = "differences.txt"
 }
 
 for _, v in ipairs(included_help_order) do

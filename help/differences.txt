@@ -1,0 +1,16 @@
+So, what's so different? Welll...
+
+Obvious:
+- Your code gets limited by time, not instructions
+- You have way more stuffs to play with
+- You get a traceback
+
+Not so obvious:
+- digiline_send and interrupts execute even when the luac errors
+- memory saving does so too 
+- if the luacontroller overheats or memory gets overfilled it will error instead of being silent about it
+
+Purely technhical:
+- There is no itbl anymore (action delayer), it uses string sandbox escaping instead
+
+There are probably way more
