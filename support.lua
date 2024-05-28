@@ -101,7 +101,7 @@ if minetest.global_exists("mesecons_debug") then
 end
 
 -- luatool support
-if minetest.global_exists("metatool") and minetest.get_modpath("metatool") then
+if minetest.global_exists("metatool") and minetest.get_modpath("luatool") then
     --[[
         From https://github.com/S-S-X/metatool/blob/master/luatool/nodes/luacontroller.lua#L1
         (also modified)
@@ -130,6 +130,9 @@ if minetest.global_exists("metatool") and minetest.get_modpath("metatool") then
             OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
             SOFTWARE.
     ]]
+
+    local luatool = metatool.tool("luatool")
+
     local o2b_lookup = {
         ['0'] = '000',
         ['1'] = '001',
@@ -162,7 +165,6 @@ if minetest.global_exists("metatool") and minetest.get_modpath("metatool") then
         name = 'libox controller',
         nodes = nodes,
         group = 'libox controller',
-        protection_bypass_read = "interact",
     }
     function definition.info(_, _, pos, player, itemstack)
         local meta = minetest.get_meta(pos)
@@ -197,5 +199,5 @@ if minetest.global_exists("metatool") and minetest.get_modpath("metatool") then
         nodedef.on_receive_fields(pos, "", fields, player)
     end
 
-    return definition
+    luatool:load_node_definition(definition)
 end
