@@ -8,6 +8,7 @@
 -- luacheck: ignore
 
 --- mesecon queue emulator
+
 local mesecon_queue = { funcs = {}, actions = {} }
 local mesecon_queue_meta = {
     __index = {
