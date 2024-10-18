@@ -7,11 +7,7 @@
 
 -- luacheck: ignore
 
-
--- mesecon queue emulator i guess
--- lmfao
--- because we cant really like... ya know use mesecon queue...? because it requires globalsteps
-
+--- mesecon queue emulator
 local mesecon_queue = { funcs = {}, actions = {} }
 local mesecon_queue_meta = {
     __index = {
