@@ -391,62 +391,6 @@ local function run_inner(pos, meta, event)
     local success, msg = libox.normal_sandbox({
         env = env,
         code = meta:get_string("code"),
-        hook_time = 50, --[[
-            Hook time is basically uhh
-            "How often should the hook function be called"
-            When i have it set to 100, it calls the hook function every 100 instructions
-
-            This number should be a tight balance between stability and security
-
-            If this number is set too high, it is vurnable to
-            x = "."
-            repeat
-                x = x .. x
-            until false
-
-            If it's too low, then you will get totally random/absurd timeouts for seemingly no reason
-
-            The number 50 seems to just work, 75 is just too much
-
-            PROGRAMS TO TEST:
-            1) If it's too high:
-
-                local t1 = minetest.get_us_time()
-                x = "."
-                for i=1,40 do
-                x = x .. x
-                end
-                print("time: "..minetest.get_us_time()-t1)
-                -- Activate this a few times/second, if hook time is too high it will create lag
-            2) If it's too low:
-                local cache = {
-                    [0] = 0,
-                    [1] = 1,
-                    [2] = 1,
-                }
-                function fib(n)
-                    if cache[n] then return cache[n] end
-                    return fib(n-2) + fib(n-1)
-                end
-
-                local t1 = minetest.get_us_time()
-                print(fib(16))
-                print("t:"..minetest.get_us_time()-t1)
-                -- Press send on the terminal a bunch of times, if t: is VERY inconsistant or high then the hook time is too low
-
-            Also, the code on the hook is very very simple
-            local time = minetest.get_us_time
-            local current_time = time() -- misleading name sorry
-            debug.sethook(function()
-                if time() - current_time > max_time then
-                    debug.sethook()
-                    error("Code timed out...")
-                end
-            end, blabla...)
-            just an if statement, 3 instructions
-
-            Also user code is NOT jit compiled (i wish, i really do... but that would require somehow interrupting `repeat until false`)
-                ]]
         max_time = settings.time_limit
     })
 
